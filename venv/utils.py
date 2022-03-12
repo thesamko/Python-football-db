@@ -6,8 +6,8 @@ def parse_into_json(soup_content, keyword, identifier):
     string_with_json_obj = ""
 
     for element in scripts:
-        if keyword in element.text:
-            string_with_json_obj = element.text.strip()
+        if keyword in element.string:
+            string_with_json_obj = element.string.strip()
             break
     try:
         ind_start = string_with_json_obj.index("('") + 2
