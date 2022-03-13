@@ -28,8 +28,9 @@ class TeamsData:
     def incremental_load(self):
         for league in self.leagues:
             schema_name = league.replace('_', '').lower()
-            data = self.get_clean_data(league, '2021')
-            year = 2021
+            year = my_constatns.CURRENT_SEASON
+            data = self.get_clean_data(league, str(year))
+
             for team_id in data:
                 self.cursor.execute(
                     f'SELECT MAX(date) FROM [landingdb].[{schema_name}].[landing_league_teamsData] WHERE team_id = {team_id}')

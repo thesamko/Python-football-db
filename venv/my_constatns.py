@@ -9,3 +9,5 @@ BASE_URL_MATCH = "https://understat.com/match/"
 BASE_URL_PLAYER = "https://understat.com/player/"
 
 BASE_URL_TEAM = 'https://understat.com/team'
+
+CURRENT_SEASON = 2021
