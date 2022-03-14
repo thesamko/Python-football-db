@@ -1,11 +1,12 @@
 import time
-from full_incremental_load import datesData, teamsData, rostersData
+from full_incremental_load import datesData, teamsData, rostersData, groupsData
 
 class Controller:
     def __init__(self):
         self.dates_data = datesData.DatesData()
         self.teams_data = teamsData.TeamsData()
         self.rosters_data = rostersData.RostersData()
+        self.groups_data = groupsData.GroupsData()
 
 
     def incremental_load(self):
@@ -22,10 +23,18 @@ class Controller:
         #print("Incremental load for teamsData tables completed in {:.0f} seconds".format(td_end_time - td_start_time))
 
         #RostersData
-        rd_start_time = time.time()
-        self.rosters_data.incremental_load()
-        rd_end_time = time.time()
-        print("Incremental load for rostersData tables completed in {:.0f} seconds".format(rd_end_time - rd_start_time))
+        #rd_start_time = time.time()
+        #self.rosters_data.incremental_load()
+        #rd_end_time = time.time()
+        #print("Incremental load for rostersData tables completed in {:.0f} seconds".format(rd_end_time - rd_start_time))
+
+        #GroupsData
+        gd_start_time = time.time()
+        self.groups_data.incremental_load()
+        gd_end_time = time.time()
+        print("Incremental load for groupsData tables completed in {:.0f} seconds".format(gd_end_time - gd_start_time))
+
+
 
     def full_load(self):
         #DatesData
