@@ -219,6 +219,9 @@ class GroupsData:
 
             for player_id in all_players:
                 data = self.get_clean_data(player_id)
+                if is_failed(data):
+                    print("Missing data at source or error in parsing for player " + str(data['identifier']))
+                    continue
                 #PositionData
                 position_query = f'''INSERT INTO [{schema_name}].[landing_player_groupsPositionData]([player_id],[position],[games_played],[goals_scored],[shots],[time],[xG],[assists],[xA],[key_passes],[yellow_cards],[red_cards]
                                         ,[non_penalty_goals],[npxG],[xG_chain],[xG_buildup],[SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
