@@ -30,7 +30,7 @@ for leag in leagues:
         json_data = parse_into_json(soup, 'groupsData', player_id)
         data = json.loads(json_data)
 
-        #Situation Start
+        #Position Start
         for year in data['position']:
             for position in data['position'][year]:
                 games = data['position'][year][position]['games']
@@ -53,7 +53,7 @@ for leag in leagues:
                 cursor.execute(query, (player_id, position, games, goals, shots, time, xG, assists, xA, key_passes, yellow,
                                        red, npg, npxG, xGChain, xGBuildup, year))
                 cursor.commit()
-        #Situation End
+        #Position End
 
         #GamePlay Start
         for year in data['situation']:

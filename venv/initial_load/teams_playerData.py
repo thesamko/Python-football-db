@@ -26,11 +26,7 @@ for leag in leagues:
         identifier = team + '/' + year
         url = base_url + '/' + identifier
         url_request = requests.get(url)
-
-
-
         soup = BeautifulSoup(url_request.content, "lxml")
-
         json_data = parse_into_json(soup, 'playersData', identifier)
         data = json.loads(json_data)
 

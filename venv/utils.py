@@ -6,8 +6,8 @@ def parse_into_json(soup_content, keyword, identifier):
     string_with_json_obj = ""
 
     for element in scripts:
-        if keyword in element.text:
-            string_with_json_obj = element.text.strip()
+        if keyword in element.string:
+            string_with_json_obj = element.string.strip()
             break
     try:
         ind_start = string_with_json_obj.index("('") + 2
@@ -15,8 +15,9 @@ def parse_into_json(soup_content, keyword, identifier):
         json_data = string_with_json_obj[ind_start:ind_end]
         json_data = json_data.encode('utf8').decode('unicode_escape')
     except:
-        print(identifier)
+        json_data = '{"identifier" : ' + str(identifier) + '}'
     return json_data
+
 
 def truncate_table(schema_name, table_list):
     connection = connector.Connection('landingdb')
@@ -25,3 +26,7 @@ def truncate_table(schema_name, table_list):
     for table in table_list:
         cursor.execute(f'TRUNCATE TABLE {schema_name}.{table}')
         cursor.commit()
+
+
+def is_failed(data):
+    return 'identifier' in data.keys()

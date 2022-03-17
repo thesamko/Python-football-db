@@ -1,6 +1,7 @@
 import pyodbc
 
-class Connection():
+
+class Connection:
 
     def __init__(self,db, driver = 'SQL Server', server = '.', tc = 'yes'):
         self.conn = pyodbc.connect('Driver={%s};'
