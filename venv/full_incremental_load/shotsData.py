@@ -48,7 +48,7 @@ class ShotsData:
             schema_name = leag.replace('_', '').lower()
             friendly_league_name = leag.replace('_', ' ')
             self.cursor.execute(f'SELECT DISTINCT player_id FROM [landingdb].[{schema_name}].[landing_teams_playersData]')
-            all_players =[id[0] for id in self.cursor.fetchall()]
+            all_players = [id[0] for id in self.cursor.fetchall()]
 
             for player_id in all_players:
                 data = self.get_clean_data(player_id)
@@ -56,13 +56,14 @@ class ShotsData:
                 self.cursor.execute(query)
                 games_played = [id[0] for id in self.cursor.fetchall()]
 
-                for shots_data in data:
+                for i in range(0, len(data)):
+                    shots_data = data.pop()
                     try:
                         match_id = shots_data['match_id']
                     except:
                         print("error at " + str(player_id))
                     if int(match_id) in games_played:
-                        continue
+                        break
                     shot_query = f'''INSERT INTO [{schema_name}].[landing_player_shotsData]([player_id],[event_id],[minute],[situation],[shot_type]
                                                                 ,[outcome],[x_cord],[y_cord],[xG],[assisted_by],[last_action],[match_id],[home_away],[year]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
                     shots_row_record = self.shots_data_to_tuple(shots_data, player_id)
