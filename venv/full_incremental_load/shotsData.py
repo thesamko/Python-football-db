@@ -46,7 +46,7 @@ class ShotsData:
     def incremental_load(self):
         for leag in self.leagues:
             schema_name = leag.replace('_', '').lower()
-            friendly_league_name = leag.replace('_', ' ')
+
             self.cursor.execute(f'SELECT DISTINCT player_id FROM [landingdb].[{schema_name}].[landing_teams_playersData]')
             all_players = [id[0] for id in self.cursor.fetchall()]
 
