@@ -15,16 +15,16 @@ class Controller:
 
     def incremental_load(self):
         #DatesData Load
-        #dd_start_time = time.time()
-        #self.dates_data.incremental_load()
-        #dd_end_time = time.time()
-        #print("Incremental load for datesData tables completed in {:.0f} seconds".format(dd_end_time-dd_start_time))
+        dd_start_time = time.time()
+        self.dates_data.incremental_load()
+        dd_end_time = time.time()
+        print("Incremental load for datesData tables completed in {:.0f} seconds".format(dd_end_time-dd_start_time))
 
         #TeamsData Load
-        #td_start_time = time.time()
-        #self.teams_data.incremental_load()
-        #td_end_time = time.time()
-        #print("Incremental load for teamsData tables completed in {:.0f} seconds".format(td_end_time - td_start_time))
+        td_start_time = time.time()
+        self.teams_data.incremental_load()
+        td_end_time = time.time()
+        print("Incremental load for teamsData tables completed in {:.0f} seconds".format(td_end_time - td_start_time))
 
         #RostersData
         #rd_start_time = time.time()
@@ -57,10 +57,10 @@ class Controller:
         #print("Incremental load for playersData tables completed in {:.0f} seconds".format(pd_end_time - pd_start_time))
 
         #StatisticsData
-        stat_start_time = time.time()
-        self.statistics_data.incremental_load()
-        stat_end_time = time.time()
-        print("Incremental load for playersData tables completed in {:.0f} seconds".format(stat_end_time - stat_start_time))
+        #stat_start_time = time.time()
+        #self.statistics_data.incremental_load()
+        #stat_end_time = time.time()
+        #print("Incremental load for playersData tables completed in {:.0f} seconds".format(stat_end_time - stat_start_time))
 
     def full_load(self):
         #DatesData

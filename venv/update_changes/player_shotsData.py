@@ -4,12 +4,15 @@ import json
 from sql import connector
 from utils import parse_into_json
 import my_constatns
-
+import time
+#
+start_time = time.time()
 leagues = my_constatns.LEAGUES
 base_url = my_constatns.BASE_URL_PLAYER
 
 conn = connector.Connection('landingdb')
 cursor = conn.cursor
+counter = 0
 
 for leag in leagues:
     schema_name = leag.replace('_', '').lower()
@@ -26,12 +29,13 @@ for leag in leagues:
         json_data = parse_into_json(soup, 'shotsData', player_id)
         data = json.loads(json_data)
 
-        query = f"SELECT DISTINCT match_id FROM [landingdb].[{schema_name}].[landing_player_shotsData] WHERE player_id = {player_id}"
+        query = f"SELECT DISTINCT match_id FROM [landingdb].[{schema_name}].[landing_player_shotsData_test] WHERE player_id = {player_id}"
         cursor.execute(query)
         games_played = [id[0] for id in cursor.fetchall()]
 
 
         for shots_data in data:
+            counter += 1
             match_id = shots_data['match_id']
             if int(match_id) in games_played:
                 continue
@@ -50,11 +54,17 @@ for leag in leagues:
             home_away = shots_data['h_a']
             year = shots_data['season']
 
-            query = f'''INSERT INTO [{schema_name}].[landing_player_shotsData]([player_id],[event_id],[minute],[situation],[shot_type]
+            query = f'''INSERT INTO [{schema_name}].[landing_player_shotsData_test]([player_id],[event_id],[minute],[situation],[shot_type]
                                     ,[outcome],[x_cord],[y_cord],[xG],[assisted_by],[last_action],[match_id],[home_away],[year]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
             cursor.execute(query, (player_id, event_id, minute, situation, shot_type, outcome, x_cord, y_cord, xG, assisted_by, last_action,
             match_id, home_away, year))
             cursor.commit()
+
+end_time = time.time()
+
+print("Incremental load for shotsData tables completed in {:.0f} seconds".format(end_time - start_time))
+print(counter)
+
 
 
 
