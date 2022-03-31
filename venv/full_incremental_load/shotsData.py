@@ -52,11 +52,12 @@ class ShotsData:
 
             for player_id in all_players:
                 data = self.get_clean_data(player_id)
+                end_range = len(data)
                 query = f"SELECT DISTINCT match_id FROM [landingdb].[{schema_name}].[landing_player_shotsData] WHERE player_id = {player_id}"
                 self.cursor.execute(query)
                 games_played = [id[0] for id in self.cursor.fetchall()]
 
-                for i in range(0, len(data)):
+                for i in range(0, end_range):
                     shots_data = data.pop()
                     try:
                         match_id = shots_data['match_id']
