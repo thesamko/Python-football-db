@@ -67,7 +67,6 @@ class PlayerData:
                 team_id = team_season[2]
                 data = self.get_clean_data(team, year)
 
-
                 for player_data in data:
                     player_data_row_record = self.player_data_to_tuple(player_data, team_id, friendly_league_name, year)
                     player_id = player_data_row_record[0]

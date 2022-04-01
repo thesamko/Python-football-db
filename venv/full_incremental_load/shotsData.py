@@ -47,7 +47,7 @@ class ShotsData:
         for leag in self.leagues:
             schema_name = leag.replace('_', '').lower()
 
-            self.cursor.execute(f'SELECT DISTINCT player_id FROM [landingdb].[{schema_name}].[landing_teams_playersData]')
+            self.cursor.execute(f'SELECT DISTINCT player_id FROM [landingdb].[{schema_name}].[landing_teams_playersData] WHERE season = {my_constatns.CURRENT_SEASON}')
             all_players = [id[0] for id in self.cursor.fetchall()]
 
             for player_id in all_players:

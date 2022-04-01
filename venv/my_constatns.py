@@ -1,4 +1,4 @@
-LEAGUES = ['Bundesliga', 'EPL', 'La_liga', 'Ligue_1', 'RFPL', 'Serie_A']
+LEAGUES =['Bundesliga', 'EPL', 'La_liga', 'Ligue_1', 'RFPL', 'Serie_A']
 
 SEASONS = ['2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021']
 
