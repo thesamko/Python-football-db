@@ -143,7 +143,7 @@ class GroupsData:
                     if self.not_current_season(year):
                         continue
                     for situation in data['situation'][year]:
-                        situation_row_record = self.situation_data_to_tuple(data['situation'][year][situation],player_id, situation, year)
+                        situation_row_record = self.situation_data_to_tuple(data['situation'][year][situation], player_id, situation, year)
                         if situation in all_situations:
                             query = f'''UPDATE [{schema_name}].[landing_player_groupsGamePlayData]
                                SET [goals_scored] = {situation_row_record[2]}

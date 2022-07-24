@@ -4,6 +4,7 @@ import json
 from sql import connector
 from utils import parse_into_json
 import my_constatns
+import pandas as pd
 
 
 class DatesData:
@@ -13,6 +14,7 @@ class DatesData:
         self.seasons = my_constatns.SEASONS
         self.base_url = my_constatns.BASE_URL_LEAGUE
         self.conn = connector.Connection('landingdb')
+        self.alchemy_connection = self.conn.create_alchemy_engine()
         self.cursor = self.conn.cursor
 
     def get_clean_data(self, league, year):
@@ -25,7 +27,6 @@ class DatesData:
         json_data = parse_into_json(soup, 'datesData', identifier)
         data = json.loads(json_data)
         return data
-
 
     def incremental_load(self):
         for league in self.leagues:
@@ -64,8 +65,6 @@ class DatesData:
                     self.cursor.execute(query)
                     self.cursor.commit()
 
-
-
     def full_load(self):
         for league in self.leagues:
             schema_name = league.replace('_', '').lower()
@@ -73,27 +72,29 @@ class DatesData:
             self.cursor.commit()
             for year in self.seasons:
                 data = self.get_clean_data(league, year)
+                season_data = []
                 for team_data in data:
-                    match_id = team_data['id']
-                    game_finished = team_data['isResult']
-                    home_teamID = team_data['h']['id']
-                    home_team_name = team_data['h']['title']
-                    away_teamID = team_data['a']['id']
-                    away_team_name = team_data['a']['title']
-                    home_team_goals = team_data['goals']['h']
-                    away_team_goals = team_data['goals']['a']
-                    home_team_xG = team_data['xG']['h']
-                    away_team_xG = team_data['xG']['a']
-                    match_date_time = team_data['datetime']
-                    forecast_win = team_data['forecast']['w'] if team_data['isResult'] else 0
-                    forecast_draw = team_data['forecast']['d'] if team_data['isResult'] else 0
-                    forecast_lose = team_data['forecast']['l'] if team_data['isResult'] else 0
+                    season_data.append({
+                        'match_id': team_data['id'],
+                        'game_finished': team_data['isResult'],
+                        'home_team': team_data['h']['id'],
+                        'home_team_name': team_data['h']['title'],
+                        'away_team': team_data['a']['id'],
+                        'away_team_name': team_data['a']['title'],
+                        'home_team_goals': team_data['goals']['h'],
+                        'away_team_goals': team_data['goals']['a'],
+                        'home_team_xG': team_data['xG']['h'],
+                        'away_team_xG': team_data['xG']['a'],
+                        'match_date_time': team_data['datetime'],
+                        'forecast_win': team_data['forecast']['w'] if team_data['isResult'] else 0,
+                        'forecast_draw': team_data['forecast']['d'] if team_data['isResult'] else 0,
+                        'forecast_lose': team_data['forecast']['l'] if team_data['isResult'] else 0,
+                        'LEAGUE': league,
+                        'SEASON': year
+                    })
 
-                    query = f'''INSERT INTO {schema_name}.landing_league_datesData ([match_id],[game_finished],[home_team],[home_team_name]
-                    ,[away_team],[away_team_name],[home_team_goals],[away_team_goals],[home_team_xG],[away_team_xG],[match_date_time]
-                    ,[forecast_win],[forecast_draw],[forecast_lose],[LEAGUE],[SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
-                    self.cursor.execute(query,
-                                   (match_id, game_finished, home_teamID, home_team_name, away_teamID, away_team_name,
-                                    home_team_goals, away_team_goals, home_team_xG, away_team_xG, match_date_time,
-                                    forecast_win, forecast_lose, forecast_draw, league, year))
-                    self.cursor.commit()
+                with self.alchemy_connection.begin() as conn:
+                    season_data_df = pd.DataFrame(season_data)
+                    conn.exec_driver_sql(f"SET IDENTITY_INSERT {schema_name}.landing_league_datesData OFF")
+                    season_data_df.to_sql('landing_league_datesData', self.alchemy_connection, schema=schema_name,
+                                          if_exists='append', index=False)
