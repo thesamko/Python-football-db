@@ -56,7 +56,6 @@ class RostersData:
             self.load_to_list(data['a'][roster_id], match_id, roster_id, 'a')
 
     def full_load(self):
-        schema_name = ''
         for league in self.leagues:
             schema_name = league.replace('_', '').lower()
             self.cursor.execute(f'TRUNCATE TABLE {schema_name}.landing_match_rostersData')
@@ -68,11 +67,10 @@ class RostersData:
                 data = self.get_clean_data(match_id)
                 self.parse_data(data, match_id)
 
-        with self.alchemy_connection.begin() as conn:
             league_data_df = pd.DataFrame(self.all_data)
             league_data_df.to_sql('landing_match_rostersData', self.alchemy_connection, schema=schema_name,
                                   if_exists='append', index=False)
-        self.all_data = []
+            self.all_data = []
 
     def incremental_load(self):
         schema_name = ''
@@ -87,8 +85,7 @@ class RostersData:
                 data = self.get_clean_data(match_id)
                 self.parse_data(data, match_id)
 
-        with self.alchemy_connection.begin() as conn:
-            league_data_df = pd.DataFrame(self.all_data)
-            league_data_df.to_sql('landing_match_rostersData', self.alchemy_connection, schema=schema_name,
-                                  if_exists='append', index=False)
+        league_data_df = pd.DataFrame(self.all_data)
+        league_data_df.to_sql('landing_match_rostersData', self.alchemy_connection, schema=schema_name,
+                              if_exists='append', index=False)
         self.all_data = []

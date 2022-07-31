@@ -108,9 +108,9 @@ class TeamsData:
                             'non_penalty_xg_diff': event['npxGD']
                         })
 
-        with self.alchemy_connection.begin() as conn:
-            league_data_df = pd.DataFrame(league_data)
-            conn.exec_driver_sql(f"SET IDENTITY_INSERT {schema_name}.landing_league_teamsData OFF")
-            league_data_df.to_sql('landing_league_teamsData', self.alchemy_connection, schema=schema_name,
-                                  if_exists='append', index=False)
-        league_data = []
+                with self.alchemy_connection.begin() as conn:
+                    league_data_df = pd.DataFrame(league_data)
+                    conn.exec_driver_sql(f"SET IDENTITY_INSERT {schema_name}.landing_league_teamsData OFF")
+                    league_data_df.to_sql('landing_league_teamsData', self.alchemy_connection, schema=schema_name,
+                                          if_exists='append', index=False)
+                league_data = []

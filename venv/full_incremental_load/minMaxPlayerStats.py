@@ -4,13 +4,16 @@ import json
 from sql import connector
 from utils import *
 import my_constatns
+import pandas as pd
 
 class MinMaxPlayerStats:
     def __init__(self):
         self.leagues = my_constatns.LEAGUES
         self.base_url = my_constatns.BASE_URL_PLAYER
         self.conn = connector.Connection('landingdb')
+        self.alchemy_connection = self.conn.create_alchemy_engine()
         self.cursor = self.conn.cursor
+        self.all_data = []
 
     def get_clean_data(self, player_id):
         url = self.base_url + str(player_id)
@@ -28,36 +31,38 @@ class MinMaxPlayerStats:
         self.cursor.execute(query)
         self.cursor.commit()
 
-    def min_max_data_to_tuple(self, data, player_id, position):
-        goals_min = data['goals']['min']
-        goals_max = data['goals']['max']
-        goals_avg = data['goals']['avg']
-        xG_min = data['xG']['min']
-        xG_max = data['xG']['max']
-        xG_avg = data['xG']['avg']
-        shots_min = data['shots']['min']
-        shots_max = data['shots']['max']
-        shots_avg = data['shots']['avg']
-        assists_min = data['assists']['min']
-        assists_max = data['assists']['max']
-        assists_avg = data['assists']['avg']
-        xA_min = data['xA']['min']
-        xA_max = data['xA']['max']
-        xA_avg = data['xA']['avg']
-        key_passes_min = data['key_passes']['min']
-        key_passes_max = data['key_passes']['max']
-        key_passes_avg = data['key_passes']['avg']
-        xGChain_min = data['xGChain']['min']
-        xGChain_max = data['xGChain']['max']
-        xGChain_avg = data['xGChain']['avg']
-        xGBuildup_min = data['xGBuildup']['min']
-        xGBuildup_max = data['xGBuildup']['max']
-        xGBuildup_avg = data['xGBuildup']['avg']
-        return player_id, position, goals_min, goals_max, goals_avg, xG_min, xG_max, xG_avg, shots_min, shots_max, shots_avg,\
-               assists_min, assists_max, assists_avg, xA_min, xA_max, xA_avg, key_passes_min, key_passes_max, key_passes_avg, \
-               xGChain_min, xGChain_max, xGChain_avg, xGBuildup_min, xGBuildup_max, xGBuildup_avg
+    def min_max_data_load_to_list(self, data, player_id, position):
+        self.all_data.append({
+            'player_id': player_id,
+            'position': position,
+            'goals_min': data['goals']['min'],
+            'goals_max': data['goals']['max'],
+            'goals_avg': data['goals']['avg'],
+            'xG_min': data['xG']['min'],
+            'xG_max': data['xG']['max'],
+            'xG_avg': data['xG']['avg'],
+            'shots_min': data['shots']['min'],
+            'shots_max': data['shots']['max'],
+            'shots_avg': data['shots']['avg'],
+            'assists_min': data['assists']['min'],
+            'assists_max': data['assists']['max'],
+            'assists_avg': data['assists']['avg'],
+            'xA_min': data['xA']['min'],
+            'xA_max': data['xA']['max'],
+            'xA_avg': data['xA']['avg'],
+            'key_passes_min': data['key_passes']['min'],
+            'key_passes_max': data['key_passes']['max'],
+            'key_passes_avg': data['key_passes']['avg'],
+            'xGChain_min': data['xGChain']['min'],
+            'xGChain_max': data['xGChain']['max'],
+            'xGChain_avg': data['xGChain']['avg'],
+            'xGBuildup_min': data['xGBuildup']['min'],
+            'xGBuildup_max': data['xGBuildup']['max'],
+            'xGBuildup_avg': data['xGBuildup']['avg']
+        })
 
     def incremental_load(self):
+        #consider you can't update from the list
         for leag in self.leagues:
             schema_name = leag.replace('_', '').lower()
             self.cursor.execute(f'SELECT DISTINCT player_id FROM [landingdb].[{schema_name}].[landing_teams_playersData] WHERE season = {my_constatns.CURRENT_SEASON}')
@@ -113,21 +118,19 @@ class MinMaxPlayerStats:
             schema_name = leag.replace('_', '').lower()
             self.cursor.execute(f'TRUNCATE TABLE {schema_name}.landing_player_minMaxPlayerStats')
             self.cursor.commit()
-            self.cursor.execute(f'SELECT DISTINCT player_id FROM [landingdb].[{schema_name}].[landing_teams_playersData]')
-            all_players = [id[0] for id in self.cursor.fetchall()]
+            self.cursor.execute(
+                    f'SELECT DISTINCT player_id FROM [landingdb].[{schema_name}].[landing_teams_playersData]')
+            all_players = [player_id[0] for player_id in self.cursor.fetchall()]
 
             for player_id in all_players:
                 data = self.get_clean_data(player_id)
                 if is_failed(data):
                     print("Missing data at source or error in parsing for player " + str(data['identifier']))
                     continue
-                min_max_query = f'''INSERT INTO [{schema_name}].[landing_player_minMaxPlayerStats]([player_id],[position],[goals_min]
-                                        ,[goals_max],[goals_avg],[xG_min],[xG_max],[xG_avg],[shots_min],[shots_max],[shots_avg],[assists_min]
-                                        ,[assists_max],[assists_avg],[xA_min],[xA_max],[xA_avg],[key_passes_min],[key_passes_max],[key_passes_avg]
-                                        ,[xGChain_min],[xGChain_max],[xGChain_avg],[xGBuildup_min],[xGBuildup_max],[xGBuildup_avg]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?)'''
                 for position in data:
-                    min_max_row_record = self.min_max_data_to_tuple(data[position], player_id, position)
-                    self.load_data_to_server(min_max_row_record, min_max_query)
+                    self.min_max_data_load_to_list(data[position], player_id, position)
 
-
-
+            league_data_df = pd.DataFrame(self.all_data)
+            league_data_df.to_sql('landing_player_minMaxPlayerStats', self.alchemy_connection, schema=schema_name,
+                                  if_exists='append', index=False)
+            self.all_data = []
