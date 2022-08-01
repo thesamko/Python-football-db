@@ -121,7 +121,7 @@ class PlayerData:
     def full_load(self):
         for league in self.leagues:
             schema_name = league.replace('_', '').lower()
-            self.cursor.execute(f'TRUNCATE TABLE {schema_name}.landing_teams_playersData_test')
+            self.cursor.execute(f'TRUNCATE TABLE {schema_name}.landing_teams_playersData')
             self.cursor.commit()
             friendly_league_name = league.replace('_', ' ')
             self.cursor.execute(f'SELECT DISTINCT team_name, season, team_id '
@@ -139,8 +139,8 @@ class PlayerData:
 
             with self.alchemy_connection.begin() as conn:
                 league_data_df = pd.DataFrame(self.league_data)
-                conn.exec_driver_sql(f"SET IDENTITY_INSERT {schema_name}.landing_teams_playersData_test OFF")
-                league_data_df.to_sql('landing_teams_playersData_test', self.alchemy_connection, schema=schema_name,
+                conn.exec_driver_sql(f"SET IDENTITY_INSERT {schema_name}.landing_teams_playersData OFF")
+                league_data_df.to_sql('landing_teams_playersData', self.alchemy_connection, schema=schema_name,
                                       if_exists='append', index=False)
             self.league_data = []
 
