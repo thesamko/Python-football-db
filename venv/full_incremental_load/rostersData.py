@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import json
 from sql import connector
-from utils import parse_into_json
+from utils import *
 import my_constatns
 import pandas as pd
 
@@ -48,12 +48,14 @@ class RostersData:
         })
 
     def parse_data(self, data, match_id):
+        if is_failed(data):
+            print("Missing data at source or error in parsing for match " + str(data['identifier']))
+        else:
+            for roster_id in data['h']:
+                self.load_to_list(data['h'][roster_id], match_id, roster_id, 'h')
 
-        for roster_id in data['h']:
-            self.load_to_list(data['h'][roster_id], match_id, roster_id, 'h')
-
-        for roster_id in data['a']:
-            self.load_to_list(data['a'][roster_id], match_id, roster_id, 'a')
+            for roster_id in data['a']:
+                self.load_to_list(data['a'][roster_id], match_id, roster_id, 'a')
 
     def full_load(self):
         for league in self.leagues:

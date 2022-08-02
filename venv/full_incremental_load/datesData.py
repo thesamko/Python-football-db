@@ -32,9 +32,10 @@ class DatesData:
         for league in self.leagues:
             schema_name = league.replace('_', '').lower()
 
-            data = self.get_clean_data(league, '2021')
-            self.cursor.execute(f'SELECT match_id FROM [landingdb].[{schema_name}].[landing_league_datesData] WHERE game_finished = 0')
-            unplayed_games = [id[0] for id in self.cursor.fetchall()]
+            data = self.get_clean_data(league, my_constatns.CURRENT_SEASON)
+            self.cursor.execute(
+                f'SELECT match_id FROM [landingdb].[{schema_name}].[landing_league_datesData] WHERE game_finished = 0')
+            unplayed_games = [match_id[0] for match_id in self.cursor.fetchall()]
             for team_data in data:
                 match_id = team_data['id']
                 game_finished = team_data['isResult']

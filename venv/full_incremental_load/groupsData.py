@@ -116,15 +116,19 @@ class GroupsData:
     def incremental_load(self):
         for league in self.leagues:
             schema_name = league.replace('_', '').lower()
-            self.cursor.execute(f'SELECT DISTINCT player_id FROM [landingdb].[{schema_name}].[landing_teams_playersData] WHERE season = {my_constatns.CURRENT_SEASON}')
-            all_players = [id[0] for id in self.cursor.fetchall()]
+            self.cursor.execute(f'SELECT DISTINCT player_id '
+                                f'FROM [landingdb].[{schema_name}].[landing_teams_playersData] '
+                                f'WHERE season = {my_constatns.CURRENT_SEASON}')
+            all_players = [player_id[0] for player_id in self.cursor.fetchall()]
 
             for player_id in all_players:
                 data = self.get_clean_data(player_id)
                 if is_failed(data):
                     print("Missing data at source or error in parsing for player " + str(data['identifier']))
                     continue
-                self.cursor.execute(f"SELECT DISTINCT position FROM [landingdb].[{schema_name}].[landing_player_groupsPositionData] WHERE player_id = {player_id} and season = {my_constatns.CURRENT_SEASON}")
+                self.cursor.execute(f"SELECT DISTINCT position "
+                                    f"FROM [landingdb].[{schema_name}].[landing_player_groupsPositionData] "
+                                    f"WHERE player_id = {player_id} and season = {my_constatns.CURRENT_SEASON}")
                 all_positions = [pos[0] for pos in self.cursor.fetchall()]
                 #PositionData
                 position_query = f'''INSERT INTO [{schema_name}].[landing_player_groupsPositionData]([player_id],[position],[games_played],
