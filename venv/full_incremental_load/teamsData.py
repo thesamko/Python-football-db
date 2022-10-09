@@ -40,7 +40,6 @@ class TeamsData:
                     f'SELECT MAX(date) FROM [landingdb].[{schema_name}].[landing_league_teamsData] '
                     f'WHERE team_id = {team_id}')
                 output = self.cursor.fetchone()
-                print(team_id, output)
                 team_name = data[team_id]['title']
                 end_range = len(data[team_id]['history'])
                 for i in range(0, end_range):

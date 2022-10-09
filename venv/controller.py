@@ -33,6 +33,12 @@ class Controller:
         rd_end_time = time.time()
         print("Incremental load for rostersData tables completed in {:.0f} seconds".format(rd_end_time - rd_start_time))
 
+        # PlayersData
+        pd_start_time = time.time()
+        self.players_data.incremental_load()
+        pd_end_time = time.time()
+        print("Incremental load for playersData tables completed in {:.0f} seconds".format(pd_end_time - pd_start_time))
+
         #GroupsData
         gd_start_time = time.time()
         self.groups_data.incremental_load()
@@ -50,12 +56,6 @@ class Controller:
         self.shots_data.incremental_load()
         sd_end_time = time.time()
         print("Incremental load for shotsData tables completed in {:.0f} seconds".format(sd_end_time - sd_start_time))
-
-        #PlayersData
-        pd_start_time = time.time()
-        self.players_data.incremental_load()
-        pd_end_time = time.time()
-        print("Incremental load for playersData tables completed in {:.0f} seconds".format(pd_end_time - pd_start_time))
 
         #StatisticsData
         stat_start_time = time.time()
