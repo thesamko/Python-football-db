@@ -62,7 +62,7 @@ class RostersData:
             schema_name = league.replace('_', '').lower()
             self.cursor.execute(f'TRUNCATE TABLE {schema_name}.landing_match_rostersData')
             self.cursor.commit()
-            self.cursor.execute(f'SELECT [match_id] FROM [landingdb].{schema_name}.[landing_league_datesData] WHERE SEASON = 2020')
+            self.cursor.execute(f'SELECT [match_id] FROM [landingdb].{schema_name}.[landing_league_datesData]')
             all_matches = [id[0] for id in self.cursor.fetchall()]
 
             for match_id in all_matches:

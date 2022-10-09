@@ -48,13 +48,15 @@ class ShotsData:
         for leag in self.leagues:
             schema_name = leag.replace('_', '').lower()
 
-            self.cursor.execute(f'SELECT DISTINCT player_id FROM [landingdb].[{schema_name}].[landing_teams_playersData] WHERE season = {my_constatns.CURRENT_SEASON}')
+            self.cursor.execute(f'SELECT DISTINCT player_id FROM [landingdb].[{schema_name}].[landing_teams_playersData] '
+                                f'WHERE season = {my_constatns.CURRENT_SEASON}')
             all_players = [id[0] for id in self.cursor.fetchall()]
 
             for player_id in all_players:
                 data = self.get_clean_data(player_id)
                 end_range = len(data)
-                query = f"SELECT DISTINCT match_id FROM [landingdb].[{schema_name}].[landing_player_shotsData] WHERE player_id = {player_id}"
+                query = f"SELECT DISTINCT match_id FROM [landingdb].[{schema_name}].[landing_player_shotsData] " \
+                        f"WHERE player_id = {player_id}"
                 self.cursor.execute(query)
                 games_played = [id[0] for id in self.cursor.fetchall()]
 
@@ -66,18 +68,9 @@ class ShotsData:
                         print("error at " + str(player_id))
                     if int(match_id) in games_played:
                         break
-                    #self.all_records.append(shots_data)
-            #df = pd.DataFrame(self.all_records)
-            #for index, r in df.iterrows():
-             #   self.cursor.execute(f"INSERT INTO [{schema_name}].[landing_player_shotsData_test]([player_id],[event_id],"
-              #                      "[minute],[situation],[shot_type],[outcome],[x_cord],[y_cord],[xG],[assisted_by],"
-               #                     "[last_action],[match_id],[home_away],[year]) "
-                #                    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", r.player_id, r.id, r.minute, r.situation,
-                 #                   r.shotType, r.result, r.X, r.Y, r.xG, r.player_assisted, r.lastAction, r.match_id, r.h_a, my_constatns.CURRENT_SEASON)
-            #self.conn.commit()
-            #self.cursor.close()
-                    shot_query = f'''INSERT INTO [{schema_name}].[landing_player_shotsData]([player_id],[event_id],[minute],[situation],[shot_type]
-                                                                ,[outcome],[x_cord],[y_cord],[xG],[assisted_by],[last_action],[match_id],[home_away],[year]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                    shot_query = f'''INSERT INTO [{schema_name}].[landing_player_shotsData]([player_id],[event_id],
+                    [minute],[situation],[shot_type],[outcome],[x_cord],[y_cord],[xG],[assisted_by],[last_action],
+                    [match_id],[home_away],[year]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
                     shots_row_record = self.shots_data_to_tuple(shots_data, player_id)
                     self.load_data_to_server(shots_row_record, shot_query)
 

@@ -26,6 +26,75 @@ class StatisticsData:
         self.attack_speed_data = []
         self.shot_type_data = []
 
+    def situation_row_record(self, data, team_id, situation, league_name, year):
+        shots_for = data['shots']
+        goals_for = data['goals']
+        xG_for = data['xG']
+        shots_against = data['against']['shots']
+        goals_against = data['against']['goals']
+        xG_against = data['against']['xG']
+        return team_id, situation, shots_for, goals_for, xG_for, shots_against, goals_against, xG_against, \
+               league_name, year
+
+    def formation_row_record(self, data, team_id, league_name, year):
+        formation = data['stat'].replace('-', '')
+        time = data['time']
+        shots = data['shots']
+        goals = data['goals']
+        xG = data['xG']
+        shots_against = data['against']['shots']
+        goals_against = data['against']['goals']
+        xG_against = data['against']['xG']
+        return team_id, formation, time, shots, goals, xG, shots_against, goals_against, xG_against, league_name, year
+
+    def gamestate_row_record(self, data, team_id, gamestate, league_name, year):
+        miuntes_played = data['time']
+        shots_for = data['shots']
+        goals_for = data['goals']
+        xG_for = data['xG']
+        shots_against = data['against']['shots']
+        goals_against = data['against']['goals']
+        xG_against = data['against']['xG']
+        return team_id, gamestate, miuntes_played, shots_for, goals_for, xG_for, shots_against, goals_against, \
+               xG_against, league_name, year
+
+    def gametime_row_record(self, data, team_id, gametime, league_name, year):
+        shots_for = data['shots']
+        goals_for = data['goals']
+        xG_for = data['xG']
+        shots_against = data['against']['shots']
+        goals_against = data['against']['goals']
+        xG_against = data['against']['xG']
+        return team_id, gametime, shots_for, goals_for, xG_for, shots_against, goals_against, xG_against, \
+               league_name, year
+
+    def shotzone_row_record(self, data, team_id, shotzone, league_name, year):
+        shots_for = data['shots']
+        goals_for = data['goals']
+        xG_for = data['xG']
+        shots_against = data['against']['shots']
+        goals_against = data['against']['goals']
+        xG_against = data['against']['xG']
+        return team_id, shotzone, shots_for, goals_for, xG_for, shots_against, goals_against, xG_against, league_name, \
+               year
+
+    def attackspeed_row_record(self, data, team_id, attack_speed, league_name, year):
+        shots_for = data['shots']
+        goals_for = data['goals']
+        xG_for = data['xG']
+        shots_against = data['against']['shots']
+        goals_against = data['against']['goals']
+        xG_against = data['against']['xG']
+        return team_id, attack_speed, shots_for, goals_for, xG_for, shots_against, goals_against, xG_against, \
+               league_name, year
+
+    def shottype_row_record(self, data, team_id, shot_type, league_name, year):
+        shots_for = data['shots']
+        xG_for = data['xG']
+        shots_against = data['against']['shots']
+        xG_against = data['against']['xG']
+        return team_id, shot_type, shots_for, xG_for, shots_against, xG_against, league_name, year
+
     def get_clean_data(self, team_name, year):
         url = self.base_url + '/' + team_name + '/' + year
         url_request = requests.get(url)
@@ -144,12 +213,13 @@ class StatisticsData:
         self.cursor.execute(query)
         self.cursor.commit()
 
-
     def incremental_load(self):
         for league in self.leagues:
             schema_name = league.replace('_', '').lower()
             friendly_league_name = league.replace('_', ' ')
-            self.cursor.execute(f'SELECT DISTINCT team_name, season, team_id FROM [landingdb].[{schema_name}].[landing_league_teamsData] WHERE SEASON = {my_constatns.CURRENT_SEASON} order by 1, 2')
+            self.cursor.execute(f'SELECT DISTINCT team_name, season, team_id '
+                                f'FROM [landingdb].[{schema_name}].[landing_league_teamsData] '
+                                f'WHERE SEASON = {my_constatns.CURRENT_SEASON} order by 1, 2')
             all_teams_seasons = self.cursor.fetchall()
 
             for team_season in all_teams_seasons:
@@ -159,8 +229,11 @@ class StatisticsData:
                 data = self.get_clean_data(team_name, year)
 
                 for situation in data['situation']:
-                    sit_condition_query = f"SELECT TOP 1 1 FROM [{schema_name}].[landing_teams_statGamePlayData] WHERE [game_play] = '{situation}' AND [team_id] = {team_id} AND SEASON = {year} "
-                    situation_row_record = self.situation_row_record(data['situation'][situation],team_id, situation, friendly_league_name, year)
+                    sit_condition_query = f"SELECT TOP 1 1 FROM [{schema_name}].[landing_teams_statGamePlayData] " \
+                                          f"WHERE [game_play] = '{situation}' AND [team_id] = {team_id} " \
+                                          f"AND SEASON = {year} "
+                    situation_row_record = self.situation_row_record(data['situation'][situation], team_id, situation,
+                                                                     friendly_league_name, year)
                     self.cursor.execute(sit_condition_query)
                     if self.cursor.fetchall():
                         situation_query = f'''UPDATE [{schema_name}].[landing_teams_statGamePlayData]
@@ -175,14 +248,19 @@ class StatisticsData:
                          WHERE [game_play] = '{situation}' AND [team_id] = {team_id} AND SEASON = {year}'''
                         self.update_server_data(situation_query)
                     else:
-                        situation_query = f'''INSERT INTO [{schema_name}].[landing_teams_statGamePlayData]([team_id],[game_play],[shots_for],[goals_for]
-                                                                                ,[xG_for],[shots_against],[goals_against],[xG_against],[LEAGUE],[SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                        situation_query = f'''INSERT INTO [{schema_name}].[landing_teams_statGamePlayData]([team_id],
+                        [game_play],[shots_for],[goals_for],[xG_for],[shots_against],[goals_against],[xG_against],
+                        [LEAGUE],[SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
                         self.load_data_to_server(situation_row_record, situation_query)
 
                 for formation_data in data['formation']:
                     formation = data['formation'][formation_data]['stat'].replace('-', '')
-                    formation_row_record = self.formation_row_record(data['formation'][formation_data], team_id,friendly_league_name, year)
-                    for_condition_query = query = f"SELECT TOP 1 1 FROM [{schema_name}].[landing_teams_statFormationData] WHERE team_id = {team_id} AND SEASON = {year} and formation = {formation}"
+                    formation_row_record = self.formation_row_record(data['formation'][formation_data], team_id,
+                                                                     friendly_league_name, year)
+                    for_condition_query = query = f"SELECT TOP 1 1 " \
+                                                  f"FROM [{schema_name}].[landing_teams_statFormationData] " \
+                                                  f"WHERE team_id = {team_id} AND SEASON = {year} " \
+                                                  f"and formation = {formation}"
                     self.cursor.execute(for_condition_query)
                     if self.cursor.fetchall():
                         formation_query = f'''UPDATE [{schema_name}].[landing_teams_statFormationData]
@@ -198,13 +276,17 @@ class StatisticsData:
                          WHERE [formation] = {formation} AND [team_id] = {team_id} AND SEASON = {year}'''
                         self.update_server_data(formation_query)
                     else:
-                        formation_query = f'''INSERT INTO [{schema_name}].[landing_teams_statFormationData]([team_id],[formation],[minutes_played]
-                                                                ,[shots_for],[goals_for],[xG_for],[shots_against],[goals_against],[xG_against],[LEAGUE],[SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                        formation_query = f'''INSERT INTO [{schema_name}].[landing_teams_statFormationData]([team_id],
+                        [formation],[minutes_played],[shots_for],[goals_for],[xG_for],[shots_against],[goals_against],
+                        [xG_against],[LEAGUE],[SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
                         self.load_data_to_server(formation_row_record, formation_query)
 
                 for gamestate in data['gameState']:
-                    gamestate_row_record = self.gamestate_row_record(data['gameState'][gamestate], team_id, gamestate, friendly_league_name, year)
-                    gam_condition_query = f"SELECT TOP 1 1 FROM [{schema_name}].[landing_teams_statGameStateData] WHERE [game_state] = '{gamestate}' AND [team_id] = {team_id} AND SEASON = {year}"
+                    gamestate_row_record = self.gamestate_row_record(data['gameState'][gamestate], team_id, gamestate,
+                                                                     friendly_league_name, year)
+                    gam_condition_query = f"SELECT TOP 1 1 FROM [{schema_name}].[landing_teams_statGameStateData] " \
+                                          f"WHERE [game_state] = '{gamestate}' AND [team_id] = {team_id} " \
+                                          f"AND SEASON = {year}"
                     self.cursor.execute(gam_condition_query)
                     if self.cursor.fetchall():
                         gamestate_query = f'''UPDATE [{schema_name}].[landing_teams_statGameStateData]
@@ -220,13 +302,17 @@ class StatisticsData:
                          WHERE [game_state] = '{gamestate}' AND [team_id] = {team_id} AND SEASON = {year}'''
                         self.update_server_data(gamestate_query)
                     else:
-                        gamestate_query = f'''INSERT INTO [{schema_name}].[landing_teams_statGameStateData]([team_id],[game_state],[minutes_played]
-                                                                ,[shots_for],[goals_for],[xG_for],[shots_against],[goals_against],[xG_against],[LEAGUE],[SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                        gamestate_query = f'''INSERT INTO [{schema_name}].[landing_teams_statGameStateData]([team_id],
+                        [game_state],[minutes_played],[shots_for],[goals_for],[xG_for],[shots_against],[goals_against],
+                        [xG_against],[LEAGUE],[SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
                         self.load_data_to_server(gamestate_row_record, gamestate_query)
 
                 for game_times in data['timing']:
-                    gametime_row_record = self.gametime_row_record(data['timing'][game_times], team_id, game_times, friendly_league_name, year)
-                    gamt_condition_query = f"SELECT TOP 1 1 FROM [{schema_name}].[landing_teams_statTimingData] WHERE [timing] = '{game_times}' AND [team_id] = {team_id} AND [SEASON] = {year}"
+                    gametime_row_record = self.gametime_row_record(data['timing'][game_times], team_id, game_times,
+                                                                   friendly_league_name, year)
+                    gamt_condition_query = f"SELECT TOP 1 1 FROM [{schema_name}].[landing_teams_statTimingData] " \
+                                           f"WHERE [timing] = '{game_times}' AND [team_id] = {team_id} " \
+                                           f"AND [SEASON] = {year}"
                     self.cursor.execute(gamt_condition_query)
                     if self.cursor.fetchall():
                         gametime_query = f'''UPDATE [{schema_name}].[landing_teams_statTimingData]
@@ -240,13 +326,17 @@ class StatisticsData:
                          WHERE [timing] = '{game_times}' AND [team_id] = {team_id} AND [SEASON] = {year}'''
                         self.update_server_data(gametime_query)
                     else:
-                        gametime_query = f'''INSERT INTO [{schema_name}].[landing_teams_statTimingData] ([team_id],[timing],[shots_for],[goals_for]
-                                                                ,[xG_for],[shots_against],[goals_against],[xG_against],[LEAGUE],[SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                        gametime_query = f'''INSERT INTO [{schema_name}].[landing_teams_statTimingData] ([team_id],
+                        [timing],[shots_for],[goals_for],[xG_for],[shots_against],[goals_against],[xG_against],[LEAGUE],
+                        [SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
                         self.load_data_to_server(gametime_row_record,gametime_query)
 
                 for shot_zone in data['shotZone']:
-                    shotzone_row_record = self.shotzone_row_record(data['shotZone'][shot_zone], team_id, shot_zone, friendly_league_name, year)
-                    sz_condition_query = f"SELECT TOP 1 1 FROM [landingdb].[{schema_name}].[landing_teams_statShotZoneData] WHERE team_id = {team_id} AND shot_zone = '{shot_zone}' AND SEASON = {year}"
+                    shotzone_row_record = self.shotzone_row_record(data['shotZone'][shot_zone], team_id, shot_zone,
+                                                                   friendly_league_name, year)
+                    sz_condition_query = f"SELECT TOP 1 1 " \
+                                         f"FROM [landingdb].[{schema_name}].[landing_teams_statShotZoneData] " \
+                                         f"WHERE team_id = {team_id} AND shot_zone = '{shot_zone}' AND SEASON = {year}"
                     self.cursor.execute(sz_condition_query)
                     if self.cursor.fetchall():
                         shotzone_query = f'''UPDATE [{schema_name}].[landing_teams_statShotZoneData]
@@ -261,13 +351,18 @@ class StatisticsData:
                          WHERE team_id = {team_id} AND shot_zone = '{shot_zone}' AND SEASON = {year}'''
                         self.update_server_data(shotzone_query)
                     else:
-                        shotzone_query = f'''INSERT INTO [{schema_name}].[landing_teams_statShotZoneData]([team_id],[shot_zone],[shots_for],[goals_for]
-                                                                ,[xG_for],[shots_against],[goals_against],[xG_against],[LEAGUE],[SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                        shotzone_query = f'''INSERT INTO [{schema_name}].[landing_teams_statShotZoneData]([team_id],
+                        [shot_zone],[shots_for],[goals_for],[xG_for],[shots_against],[goals_against],[xG_against],
+                        [LEAGUE],[SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
                         self.load_data_to_server(shotzone_row_record, shotzone_query)
 
                 for attack_speed in data['attackSpeed']:
-                    attackspeed_row_record = self.attackspeed_row_record(data['attackSpeed'][attack_speed],team_id,attack_speed,friendly_league_name,year)
-                    ap_condition_query = f"SELECT TOP 1 1 FROM [landingdb].[{schema_name}].[landing_teams_statAttackSpeedData] WHERE team_id = {team_id} AND attack_speed = '{attack_speed}' AND SEASON = {year}"
+                    attackspeed_row_record = self.attackspeed_row_record(data['attackSpeed'][attack_speed], team_id,
+                                                                         attack_speed, friendly_league_name, year)
+                    ap_condition_query = f"SELECT TOP 1 1 " \
+                                         f"FROM [landingdb].[{schema_name}].[landing_teams_statAttackSpeedData] " \
+                                         f"WHERE team_id = {team_id} AND attack_speed = '{attack_speed}' " \
+                                         f"AND SEASON = {year}"
                     self.cursor.execute(ap_condition_query)
                     if self.cursor.fetchall():
                         attackspeed_query = f'''UPDATE [{schema_name}].[landing_teams_statAttackSpeedData]
@@ -281,13 +376,17 @@ class StatisticsData:
                          WHERE team_id = {team_id} AND attack_speed = '{attack_speed}' AND SEASON = {year}'''
                         self.update_server_data(attackspeed_query)
                     else:
-                        attackspeed_query = f'''INSERT INTO [{schema_name}].[landing_teams_statAttackSpeedData] ([team_id],[attack_speed],[shots_for]
-                                                                ,[goals_for],[xG_for],[shots_against],[goals_against],[xG_against],[LEAGUE],[SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                        attackspeed_query = f'''INSERT INTO [{schema_name}].[landing_teams_statAttackSpeedData] 
+                        ([team_id],[attack_speed],[shots_for],[goals_for],[xG_for],[shots_against],[goals_against],
+                        [xG_against],[LEAGUE],[SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
                         self.load_data_to_server(attackspeed_row_record,attackspeed_query)
 
                 for shot_type in data['result']:
-                    shottype_row_record = self.shottype_row_record(data['result'][shot_type], team_id, shot_type, friendly_league_name, year)
-                    st_condition_query = f"SELECT TOP 1 1 FROM [landingdb].[{schema_name}].[landing_teams_statShotTypeData] WHERE team_id = {team_id} AND shot_type = '{shot_type}' AND SEASON = {year}"
+                    shottype_row_record = self.shottype_row_record(data['result'][shot_type], team_id, shot_type,
+                                                                   friendly_league_name, year)
+                    st_condition_query = f"SELECT TOP 1 1 " \
+                                         f"FROM [landingdb].[{schema_name}].[landing_teams_statShotTypeData] " \
+                                         f"WHERE team_id = {team_id} AND shot_type = '{shot_type}' AND SEASON = {year}"
                     self.cursor.execute(st_condition_query)
                     if self.cursor.fetchall():
                         shottype_query = f'''UPDATE [{schema_name}].[landing_teams_statShotTypeData]
@@ -299,8 +398,9 @@ class StatisticsData:
                          WHERE team_id = {team_id} AND shot_type = '{shot_type}' AND SEASON = {year}'''
                         self.update_server_data(shottype_query)
                     else:
-                        shottype_query = f'''INSERT INTO [{schema_name}].[landing_teams_statShotTypeData]([team_id],[shot_type],[shots_for]
-                                                            ,[xG_for],[shots_against],[xG_against],[LEAGUE],[SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?)'''
+                        shottype_query = f'''INSERT INTO [{schema_name}].[landing_teams_statShotTypeData]
+                        ([team_id],[shot_type],[shots_for],[xG_for],[shots_against],[xG_against],[LEAGUE],[SEASON]) 
+                        VALUES(?, ?, ?, ?, ?, ?, ?, ?)'''
                         self.load_data_to_server(shottype_row_record, shottype_query)
 
     def full_load(self):

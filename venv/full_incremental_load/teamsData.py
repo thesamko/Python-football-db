@@ -6,6 +6,7 @@ from utils import parse_into_json
 import my_constatns
 import pandas as pd
 
+
 class TeamsData:
 
     def __init__(self):
@@ -36,14 +37,17 @@ class TeamsData:
 
             for team_id in data:
                 self.cursor.execute(
-                    f'SELECT MAX(date) FROM [landingdb].[{schema_name}].[landing_league_teamsData] WHERE team_id = {team_id}')
+                    f'SELECT MAX(date) FROM [landingdb].[{schema_name}].[landing_league_teamsData] '
+                    f'WHERE team_id = {team_id}')
                 output = self.cursor.fetchone()
+                print(team_id, output)
                 team_name = data[team_id]['title']
                 end_range = len(data[team_id]['history'])
                 for i in range(0, end_range):
                     event = data[team_id]['history'].pop()
-                    if event['date'][:9] <= output[0]:
-                        break
+                    if output[0] is not None:
+                        if event['date'][:9] <= output[0]:
+                            break
                     h_a = event['h_a']
                     xG = event['xG']
                     xGA = event['xGA']
@@ -63,12 +67,15 @@ class TeamsData:
                     loses = event['loses']
                     pts = event['pts']
                     npxGD = event['npxGD']
-                    query = f'''INSERT INTO {schema_name}.landing_league_teamsData ([team_id],[team_name],[season],[home_or_away]
-                               ,[expected_goals],[expected_goals_assists],[not_penalty_xg],[not_penalty_xg_assists],[passes_defensive_action_attack]
-                               ,[passes_defensive_action_defence],[deep_passes],[deep_passes_allowed],[goals_scored],[goals_conceded],[expected_points]
-                               ,[match_outcome],[date],[wins] ,[draws],[loses],[points],[non_penalty_xg_diff]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
-                    self.cursor.execute(query, (team_id, team_name, year, h_a, xG, xGA, npxG, npxGA, ppda_att, ppda_def, deep, deep_allowed,
-                    scored, missed, xpts, result, date, wins, draws, loses, pts, npxGD))
+                    query = f'''INSERT INTO {schema_name}.landing_league_teamsData ([team_id],[team_name],[season],
+                    [home_or_away],[expected_goals],[expected_goals_assists],[not_penalty_xg],[not_penalty_xg_assists],
+                    [passes_defensive_action_attack],[passes_defensive_action_defence],[deep_passes],
+                    [deep_passes_allowed],[goals_scored],[goals_conceded],[expected_points],[match_outcome],[date],
+                    [wins],[draws],[loses],[points],[non_penalty_xg_diff]) 
+                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                    self.cursor.execute(query, (team_id, team_name, year, h_a, xG, xGA, npxG, npxGA, ppda_att,
+                                                ppda_def, deep, deep_allowed,scored, missed, xpts, result, date, wins,
+                                                draws, loses, pts, npxGD))
                     self.cursor.commit()
 
     def full_load(self):

@@ -48,6 +48,29 @@ class PlayerData:
             'SEASON': year
         })
 
+    def player_data_to_tuple(self, player_data, team_id, friendly_league_name, year):
+        player_id = player_data['id']
+        player_name = player_data['player_name']
+        games_played = player_data['games']
+        minutes_played = player_data['time']
+        goals_scored = player_data['goals']
+        xG = player_data['xG']
+        assists = player_data['assists']
+        xA = player_data['xA']
+        shots = player_data['shots']
+        key_passes = player_data['key_passes']
+        yellow_cards = player_data['yellow_cards']
+        red_cards = player_data['red_cards']
+        position = player_data['position']
+        team_name = player_data['team_title']
+        non_penalty_goals = player_data['npg']
+        npxG = player_data['npxG']
+        xG_chain = player_data['xGChain']
+        xG_buildup = player_data['xGBuildup']
+        return player_id, player_name, games_played, minutes_played, goals_scored, xG, assists, \
+               xA, shots, key_passes, yellow_cards, red_cards, position, team_id, non_penalty_goals, \
+               npxG, xG_chain, xG_buildup, friendly_league_name, year
+
     def load_data_to_server(self, data_record, query):
         self.cursor.execute(query, data_record)
         self.cursor.commit()
@@ -60,9 +83,12 @@ class PlayerData:
         for league in self.leagues:
             schema_name = league.replace('_', '').lower()
             friendly_league_name = league.replace('_', ' ')
-            self.cursor.execute(f'SELECT DISTINCT player_id FROM {schema_name}.landing_teams_playersData WHERE season = {my_constatns.CURRENT_SEASON}')
+            self.cursor.execute(f'SELECT DISTINCT player_id FROM {schema_name}.landing_teams_playersData '
+                                f'WHERE season = {my_constatns.CURRENT_SEASON}')
             all_players = [id[0] for id in self.cursor.fetchall()]
-            self.cursor.execute(f'SELECT DISTINCT team_name, season, team_id FROM [landingdb].[{schema_name}].[landing_league_teamsData] WHERE season = {my_constatns.CURRENT_SEASON} order by 1, 2')
+            self.cursor.execute(f'SELECT DISTINCT team_name, season, team_id '
+                                f'FROM [landingdb].[{schema_name}].[landing_league_teamsData] '
+                                f'WHERE season = {my_constatns.CURRENT_SEASON} order by 1, 2')
             all_teams_seasons = self.cursor.fetchall()
 
             for team_season in all_teams_seasons:
@@ -75,9 +101,11 @@ class PlayerData:
                     player_data_row_record = self.player_data_to_tuple(player_data, team_id, friendly_league_name, year)
                     player_id = player_data_row_record[0]
                     if int(player_id) in all_players:
-                        query = f"SELECT TOP 1 1 FROM {schema_name}.landing_teams_playersData WHERE season = {my_constatns.CURRENT_SEASON} and player_id = {player_id} and team_id = {team_id}"
+                        query = f"SELECT TOP 1 1 FROM {schema_name}.landing_teams_playersData " \
+                                f"WHERE season = {my_constatns.CURRENT_SEASON} and player_id = {player_id} " \
+                                f"and team_id = {team_id}"
                         self.cursor.execute(query)
-                        if (self.cursor.fetchall()):
+                        if self.cursor.fetchall():
                             query = f'''UPDATE [{schema_name}].[landing_teams_playersData]
                                SET 
                                   [games_played] = {player_data_row_record[2]}
@@ -99,24 +127,26 @@ class PlayerData:
                              WHERE player_id = {player_id} and team_id = {team_id}'''
                             self.update_server_data(query)
                         else:
-                            player_data_query = f'''INSERT INTO {schema_name}.landing_teams_playersData([player_id],[player_name],[games_played],[minutes_played]
-                                                                ,[goals_scored],[xG],[assists],[xA],[shots],[key_passes],[yellow_cards],[red_cards],[position],[team_id]
-                                                                ,[non_penalty_goals],[npxG],[xG_chain],[xG_buildup],[LEAGUE],[SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
-
+                            player_data_query = f'''INSERT INTO {schema_name}.landing_teams_playersData([player_id],
+                            [player_name],[games_played],[minutes_played],[goals_scored],[xG],[assists],[xA],[shots],
+                            [key_passes],[yellow_cards],[red_cards],[position],[team_id],[non_penalty_goals],[npxG],
+                            [xG_chain],[xG_buildup],[LEAGUE],[SEASON]) 
+                            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
 
                             player_data_row_record = self.player_data_to_tuple(player_data, team_id,
-                                                                                   friendly_league_name, year)
+                                                                               friendly_league_name, year)
                             self.load_data_to_server(player_data_row_record, player_data_query)
                     else:
-                        player_data_query = f'''INSERT INTO {schema_name}.landing_teams_playersData([player_id],[player_name],[games_played],[minutes_played]
-                                                            ,[goals_scored],[xG],[assists],[xA],[shots],[key_passes],[yellow_cards],[red_cards],[position],[team_id]
-                                                            ,[non_penalty_goals],[npxG],[xG_chain],[xG_buildup],[LEAGUE],[SEASON]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                        player_data_query = f'''INSERT INTO {schema_name}.landing_teams_playersData([player_id],
+                        [player_name],[games_played],[minutes_played],[goals_scored],[xG],[assists],[xA],[shots],
+                        [key_passes],[yellow_cards],[red_cards],[position],[team_id],[non_penalty_goals],[npxG],
+                        [xG_chain],[xG_buildup],[LEAGUE],[SEASON]) 
+                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
 
 
                         player_data_row_record = self.player_data_to_tuple(player_data, team_id,
-                                                                               friendly_league_name, year)
+                                                                           friendly_league_name, year)
                         self.load_data_to_server(player_data_row_record, player_data_query)
-
 
     def full_load(self):
         for league in self.leagues:

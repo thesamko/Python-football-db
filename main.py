@@ -2,7 +2,7 @@ from controller import Controller
 
 controller = Controller()
 
-controller.full_load()
+controller.incremental_load()
 
 
 
