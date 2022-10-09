@@ -17,7 +17,8 @@ class DatesData:
         self.alchemy_connection = self.conn.create_alchemy_engine()
         self.cursor = self.conn.cursor
 
-    def get_clean_data(self, league, year):
+    def get_clean_data(self, league, input_year):
+        year = str(input_year)
         url = self.base_url + '/' + league + '/' + year
         url_request = requests.get(url)
         identifier = league + '/' + year
