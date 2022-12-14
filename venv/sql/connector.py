@@ -13,9 +13,10 @@ class Connection:
         self.cursor = self.conn.cursor()
         self.driver = driver
         self.database = db
+        self.server = server
 
     def create_alchemy_engine(self):
-        alchemy_connection = create_engine('mssql+pyodbc://LAPTOP-8V6UPAAI/landingdb?driver=SQL+Server')
+        alchemy_connection = create_engine(f'mssql+pyodbc://{self.server}/{self.db}?driver=SQL+Server')
         return alchemy_connection
 
 
